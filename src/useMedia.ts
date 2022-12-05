@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { isBrowser } from './misc/util';
+import { isBrowser, off, on } from './misc/util';
 
 const getInitialState = (query: string, defaultState?: boolean) => {
   // Prevent a React hydration mismatch when a default value is provided by not defaulting to window.matchMedia(query).matches.
@@ -27,16 +27,19 @@ const useMedia = (query: string, defaultState?: boolean) => {
   useEffect(() => {
     let mounted = true;
     const mql = window.matchMedia(query);
-
-    mql.onchange = (e) => {
-      if (!mounted) return;
-      setState(e.matches);
+    const onChange = () => {
+      if (!mounted) {
+        return;
+      }
+      setState(!!mql.matches);
     };
 
+    on(mql, 'change', onChange);
     setState(mql.matches);
 
     return () => {
       mounted = false;
+      off(mql, 'change', onChange);
     };
   }, [query]);
 
